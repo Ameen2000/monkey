@@ -4,45 +4,46 @@ type t =
   { input : string
   ; mutable position : int
   ; mutable readPositon : int
-  ; mutable ch : char
+  ; mutable ch : char option
   }
 
 let read_char lexer =
   let next_char =
     if lexer.readPositon >= String.length lexer.input
-    then lexer.ch <- char_of_int 0
+    then lexer.ch <- Some '\000'
     else
-      lexer.ch
-        <- (let string_list = lexer.input |> String.to_list in
-            List.nth_exn string_list lexer.readPositon)
+      lexer.ch <- Some (String.get lexer.input lexer.readPositon)
   in
   next_char;
   lexer.position <- lexer.readPositon;
   lexer.readPositon <- lexer.readPositon + 1
 ;;
 
-let next l =
-  let char_of_input = l |> String.to_list |> List.hd_exn in
-  let lexer =
-    { input = l; position = 0; readPositon = 0; ch = char_of_input }
-  in
-  read_char lexer;
-  lexer
+let init input =
+  if String.is_empty input
+  then {input; position = 0; readPositon = 0; ch = None}
+  else {input; position = 0; readPositon = 0; ch = Some (String.get input 0)}
 ;;
 
 let token_of_char lexer =
   let aux lexer =
     match lexer.ch with
-    | '=' -> Token.Assign
-    | ';' -> Token.Semicolon
-    | '(' -> Token.LParen
-    | ')' -> Token.RParen
-    | ',' -> Token.Comma
-    | '+' -> Token.Plus
-    | '{' -> Token.LBrace
-    | '}' -> Token.RBrace
-    | '\000' -> Token.EOF
-    | _ -> assert false
+    | None -> None
+    | Some ch ->
+        let token =
+        match ch with
+        | '=' -> Token.Assign
+        | ';' -> Token.Semicolon
+        | '(' -> Token.LParen
+        | ')' -> Token.RParen
+        | ',' -> Token.Comma
+        | '+' -> Token.Plus
+        | '{' -> Token.LBrace
+        | '}' -> Token.RBrace
+        | '\000' -> Token.EOF
+        | ch -> Fmt.failwith "unknown character: %c" ch
+        in
+        Some token
   in
   read_char lexer;
   aux lexer
