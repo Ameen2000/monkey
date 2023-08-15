@@ -17,3 +17,10 @@ type t =
   (* Keywords *)
   | Function
   | Let
+
+let lookup_ident keyword =
+  match keyword with
+  | "fn" -> Function
+  | "let" -> Let
+  | _ -> Ident keyword
+;;

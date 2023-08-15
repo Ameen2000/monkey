@@ -24,7 +24,7 @@ let init input =
   else { input; position = 0; readPositon = 0; ch = Some (String.get input 0) }
 ;;
 
-let read_identifier lexer =
+let read_while lexer =
   let positon = lexer.position in
   let rec aux ch l =
     match ch with
@@ -35,11 +35,16 @@ let read_identifier lexer =
        | _ -> ())
   in
   aux lexer.ch lexer;
-  String.unsafe_sub ~pos:positon ~len:(lexer.position - positon) lexer.input
+  String.sub ~pos:positon ~len:(lexer.position - positon) lexer.input
 ;;
+
+let read_identifier lexer = read_while lexer |> Token.lookup_ident
+let read_number lexer = Token.Int (read_while lexer)
 
 let next_token lexer =
   let token_of_char lexer =
+    let is_identifer ch = Char.(ch = '-' || is_alpha ch) in
+    let is_number ch = Char.is_digit ch in
     match lexer.ch with
     | None -> None
     | Some ch ->
@@ -54,7 +59,12 @@ let next_token lexer =
         | '{' -> Token.LBrace
         | '}' -> Token.RBrace
         | '\000' -> Token.EOF
-        | ch -> Fmt.failwith "unkown character %c" ch
+        | ch ->
+          if is_identifer ch
+          then read_identifier lexer
+          else if is_number ch
+          then read_number lexer
+          else Fmt.failwith "unkown char %c" ch
       in
       Some token
   in
