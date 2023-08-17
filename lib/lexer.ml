@@ -3,25 +3,26 @@ open Core
 type t =
   { input : string
   ; mutable position : int
-  ; mutable readPositon : int
+  ; mutable read_position : int
   ; mutable ch : char option
   }
 
 let read_char lexer =
   let next_char =
-    if lexer.readPositon >= String.length lexer.input
+    if lexer.read_position >= String.length lexer.input
     then lexer.ch <- Some '\000'
-    else lexer.ch <- Some (String.get lexer.input lexer.readPositon)
+    else lexer.ch <- Some (String.get lexer.input lexer.read_position)
   in
   next_char;
-  lexer.position <- lexer.readPositon;
-  lexer.readPositon <- lexer.readPositon + 1
+  lexer.position <- lexer.read_position;
+  lexer.read_position <- lexer.read_position + 1
 ;;
 
 let init input =
   if String.is_empty input
-  then { input; position = 0; readPositon = 0; ch = None }
-  else { input; position = 0; readPositon = 0; ch = Some (String.get input 0) }
+  then { input; position = 0; read_position = 0; ch = None }
+  else
+    { input; position = 0; read_position = 0; ch = Some (String.get input 0) }
 ;;
 
 let read_while lexer =
