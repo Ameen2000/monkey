@@ -2,20 +2,18 @@ open Core
 
 type t =
   { input : string
-  ; mutable position : int
-  ; mutable read_position : int
-  ; mutable ch : char option
+  ; position : int
+  ; read_position : int
+  ; ch : char option
   }
+[@@deriving show]
 
 let advance lexer =
-  let next_char =
-    if lexer.read_position >= String.length lexer.input - 1
-    then lexer.ch <- None
-    else lexer.ch <- Some (String.get lexer.input lexer.read_position)
-  in
-  next_char;
-  lexer.position <- lexer.read_position;
-  lexer.read_position <- lexer.read_position + 1
+  if lexer.read_position >= String.length lexer.input - 1
+  then { lexer with ch = None }
+  else (
+    let position = lexer.position + 1 in
+    { lexer with position; ch = Some (String.get lexer.input position) })
 ;;
 
 let init input =
@@ -25,67 +23,66 @@ let init input =
     { input; position = 0; read_position = 0; ch = Some (String.get input 0) }
 ;;
 
-let read_while lexer =
+let read_while lexer condition =
   let positon = lexer.position in
-  let rec aux ch l =
-    match ch with
-    | None -> ()
-    | Some x ->
-      (match Char.is_alpha x with
-       | true -> advance l
-       | _ -> ())
-  in
-  aux lexer.ch lexer;
-  String.sub ~pos:positon ~len:(lexer.position - positon) lexer.input
-;;
-
-let skip_whitespace lexer =
-  let rec aux lexer =
-    let condition =
-      match lexer.ch with
-      | None -> false
-      | Some ch -> Char.(ch = ' ' || ch = '\t' || ch = '\n' || ch = '\r')
+  let aux lexer condition =
+    let rec loop lexer =
+      if condition lexer.ch then loop (advance lexer) else lexer
     in
-    if condition
-    then (
-      advance lexer;
-      aux lexer)
-    else lexer
+    let lexer = loop lexer in
+    lexer, lexer.position
   in
-  aux lexer
+  let lexer, positon_end =
+    aux lexer (fun ch ->
+      match ch with
+      | Some character -> condition character
+      | None -> false)
+  in
+  lexer, String.sub lexer.input ~pos:positon ~len:(positon_end - positon)
 ;;
 
-let read_identifier lexer = read_while lexer |> Token.lookup_ident
-let read_number lexer = Token.Int (read_while lexer)
+let is_number ch = Char.is_digit ch
+let is_identifer ch = Char.(ch = '_' || is_alpha ch)
+
+let read_identifier lexer =
+  let lexer, ident = read_while lexer is_identifer in
+  lexer, Token.lookup_ident ident
+;;
+
+let read_number lexer =
+  let lexer, number = read_while lexer is_number in
+  lexer, Token.Int number
+;;
+
+let rec skip_whitespace lexer =
+  match lexer.ch with
+  | None -> lexer
+  | Some character ->
+      if Char.is_whitespace character then skip_whitespace (advance lexer)
+      else lexer
 
 let next_token lexer =
-  let token_of_char lexer =
-    let is_identifer ch = Char.(ch = '_' || is_alpha ch) in
-    let is_number ch = Char.is_digit ch in
-    let lexer = skip_whitespace lexer in
-    match lexer.ch with
-    | None -> None
-    | Some ch ->
-      let token =
-        match ch with
-        | '=' -> Token.Assign
-        | ';' -> Token.Semicolon
-        | '(' -> Token.LParen
-        | ')' -> Token.RParen
-        | ',' -> Token.Comma
-        | '+' -> Token.Plus
-        | '{' -> Token.LBrace
-        | '}' -> Token.RBrace
-        | '\000' -> Token.EOF
-        | ch ->
-          if is_identifer ch
-          then read_identifier lexer
-          else if is_number ch
-          then read_number lexer
-          else Fmt.failwith "unkown char %c" ch
-      in
-      Some token
-  in
-  advance lexer;
-  token_of_char lexer
+  let lexer = skip_whitespace lexer in
+  match lexer.ch with
+  | None -> lexer, None
+  | Some ch ->
+    let lexer, token =
+      match ch with
+      | '=' -> advance lexer, Token.Assign
+      | ';' -> advance lexer, Token.Semicolon
+      | '(' -> advance lexer, Token.LParen
+      | ')' -> advance lexer, Token.RParen
+      | ',' -> advance lexer, Token.Comma
+      | '+' -> advance lexer, Token.Plus
+      | '{' -> advance lexer, Token.LBrace
+      | '}' -> advance lexer, Token.RBrace
+      | '\000' -> advance lexer, Token.EOF
+      | ch ->
+        if is_identifer ch
+        then read_identifier lexer
+        else if is_number ch
+        then read_number lexer
+        else Fmt.failwith "Unkown character: %c" ch
+    in
+    lexer, Some token
 ;;

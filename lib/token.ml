@@ -1,5 +1,5 @@
 type t =
-  | Illegal of string
+  | Illegal
   | EOF
   (* Identifiers + literals *)
   | Ident of string
@@ -17,6 +17,7 @@ type t =
   (* Keywords *)
   | Function
   | Let
+[@@deriving show, eq]
 
 let lookup_ident keyword =
   match keyword with
