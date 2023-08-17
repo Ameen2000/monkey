@@ -86,3 +86,5 @@ let next_token lexer =
     in
     lexer, Some token
 ;;
+
+let print lexer = show lexer;;
