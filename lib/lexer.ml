@@ -9,11 +9,12 @@ type t =
 [@@deriving show]
 
 let advance lexer =
-  if lexer.read_position >= String.length lexer.input - 1
+  if lexer.read_position >= String.length lexer.input
   then { lexer with ch = None }
   else (
-    let position = lexer.position + 1 in
-    { lexer with position; ch = Some (String.get lexer.input position) })
+    let position = lexer.read_position in
+    let read_position = lexer.read_position + 1 in
+    { lexer with position; read_position; ch = Some (String.get lexer.input position) })
 ;;
 
 let init input =
@@ -58,7 +59,7 @@ let rec skip_whitespace lexer =
   match lexer.ch with
   | None -> lexer
   | Some character ->
-      if Char.is_whitespace character then skip_whitespace (advance lexer)
+      if Char.is_whitespace character then advance lexer |> skip_whitespace
       else lexer
 
 let next_token lexer =
@@ -86,5 +87,3 @@ let next_token lexer =
     in
     lexer, Some token
 ;;
-
-let print lexer = show lexer;;
