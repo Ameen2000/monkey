@@ -2,19 +2,25 @@ open Core
 
 type t =
   { input : string
-  ; position : int
-  ; read_position : int
-  ; ch : char option
+  ; mutable position : int
+  ; mutable read_position : int
+  ; mutable ch : char option
   }
 [@@deriving show]
 
 let advance lexer =
-  if lexer.read_position >= String.length lexer.input
-  then { lexer with ch = None }
-  else (
-    let position = lexer.read_position in
-    let read_position = lexer.read_position + 1 in
-    { lexer with position; read_position; ch = Some (String.get lexer.input position) })
+  let side_effect lexer =
+    let check_char =
+      if lexer.read_position >= String.length lexer.input
+      then lexer.ch <- None
+      else lexer.ch <- Some (String.get lexer.input lexer.read_position)
+    in
+    check_char;
+    lexer.position <- lexer.read_position;
+    lexer.read_position <- lexer.read_position + 1
+  in
+  side_effect lexer;
+  lexer
 ;;
 
 let init input =
@@ -59,8 +65,10 @@ let rec skip_whitespace lexer =
   match lexer.ch with
   | None -> lexer
   | Some character ->
-      if Char.is_whitespace character then advance lexer |> skip_whitespace
-      else lexer
+    if Char.is_whitespace character
+    then advance lexer |> skip_whitespace
+    else lexer
+;;
 
 let next_token lexer =
   let lexer = skip_whitespace lexer in
@@ -87,3 +95,16 @@ let next_token lexer =
     in
     lexer, Some token
 ;;
+
+let collect_tokens input =
+  let lexer = init input in
+  let rec aux lexer accum =
+    match lexer.ch with
+    | None -> List.rev accum
+    | _ ->
+        let lx, token = next_token lexer in
+        match token with
+        | None -> aux lx accum
+        | Some tk -> aux lx (tk :: accum)
+  in
+  aux lexer []
