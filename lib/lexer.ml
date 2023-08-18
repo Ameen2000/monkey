@@ -27,7 +27,7 @@ let init input =
   if String.is_empty input
   then { input; position = 0; read_position = 0; ch = None }
   else
-    { input; position = 0; read_position = 0; ch = Some (String.get input 0) }
+    { input; position = 0; read_position = 1; ch = Some (String.get input 0) }
 ;;
 
 let read_while lexer condition =
@@ -102,9 +102,10 @@ let collect_tokens input =
     match lexer.ch with
     | None -> List.rev accum
     | _ ->
-        let lx, token = next_token lexer in
-        match token with
-        | None -> aux lx accum
-        | Some tk -> aux lx (tk :: accum)
+      let lx, token = next_token lexer in
+      (match token with
+       | None -> aux lx accum
+       | Some tk -> aux lx (tk :: accum))
   in
   aux lexer []
+;;
