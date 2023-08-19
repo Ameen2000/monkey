@@ -1,4 +1,3 @@
 open Monkey
 
-let () =
-  Repl.repl
+let () = Repl.repl
