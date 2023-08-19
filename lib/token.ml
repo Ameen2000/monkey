@@ -13,6 +13,8 @@ type t =
   | Slash
   | LT
   | GT
+  | Equal
+  | Not_Equal
   (* Delimiters *)
   | Comma
   | Semicolon
@@ -23,11 +25,21 @@ type t =
   (* Keywords *)
   | Function
   | Let
+  | True
+  | False
+  | If
+  | Else
+  | Return
 [@@deriving show, eq]
 
 let lookup_ident keyword =
   match keyword with
   | "fn" -> Function
   | "let" -> Let
+  | "true" -> True
+  | "false" -> False
+  | "if" -> If
+  | "else" -> Else
+  | "return" -> Return
   | _ -> Ident keyword
 ;;

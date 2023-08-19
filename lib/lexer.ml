@@ -70,6 +70,20 @@ let rec skip_whitespace lexer =
     else lexer
 ;;
 
+let peek_char lexer =
+  if lexer.read_position >= String.length lexer.input
+  then None
+  else Some (String.get lexer.input lexer.read_position)
+;;
+
+let peek_assign lexer ch ~default ~next =
+  let lexer, result =
+    match peek_char lexer with
+    | Some character when Char.(character = ch) -> advance lexer, next
+    | _ -> lexer, default
+  in
+  advance lexer, result
+
 let next_token lexer =
   let lexer = skip_whitespace lexer in
   match lexer.ch with
@@ -77,14 +91,14 @@ let next_token lexer =
   | Some ch ->
     let lexer, token =
       match ch with
-      | '=' -> advance lexer, Token.Assign
+      | '=' -> peek_assign lexer '=' ~default:Token.Assign ~next:Token.Equal
       | ';' -> advance lexer, Token.Semicolon
       | '(' -> advance lexer, Token.LParen
       | ')' -> advance lexer, Token.RParen
       | ',' -> advance lexer, Token.Comma
       | '+' -> advance lexer, Token.Plus
       | '-' -> advance lexer, Token.Minus
-      | '!' -> advance lexer, Token.Bang
+      | '!' -> peek_assign lexer '=' ~default:Token.Bang ~next:Token.Not_Equal
       | '*' -> advance lexer, Token.Asterisk
       | '/' -> advance lexer, Token.Slash
       | '<' -> advance lexer, Token.LT
