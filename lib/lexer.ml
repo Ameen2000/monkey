@@ -83,6 +83,7 @@ let peek_assign lexer ch ~default ~next =
     | _ -> lexer, default
   in
   advance lexer, result
+;;
 
 let next_token lexer =
   let lexer = skip_whitespace lexer in
