@@ -1,7 +1,15 @@
 open Monkey
 open Core
 
-let () = 
-  let input = "+= 12 let 5 4 ();,{}fn x\nlet x = 5 + 5; -/!<> == !== *" in
-  let tokens = Lexer.collect_tokens input |> List.map ~f:(Token.show) in
-  List.iter ~f:print_endline tokens
+let () =
+  let terminator = "#quit" in
+  let run = ref true in
+  while !run do
+    let user_input = In_channel.(input_line_exn stdin) in
+    if String.(equal user_input terminator)
+    then run := false
+    else (
+      let tokens = Lexer.collect_tokens user_input |> List.map ~f:Token.show in
+      List.iter ~f:print_endline tokens)
+  done
+;;
