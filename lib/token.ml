@@ -7,6 +7,12 @@ type t =
   (* Operators *)
   | Assign
   | Plus
+  | Minus
+  | Bang
+  | Asterisk
+  | Slash
+  | LT
+  | GT
   (* Delimiters *)
   | Comma
   | Semicolon

@@ -83,6 +83,12 @@ let next_token lexer =
       | ')' -> advance lexer, Token.RParen
       | ',' -> advance lexer, Token.Comma
       | '+' -> advance lexer, Token.Plus
+      | '-' -> advance lexer, Token.Minus
+      | '!' -> advance lexer, Token.Bang
+      | '*' -> advance lexer, Token.Asterisk
+      | '/' -> advance lexer, Token.Slash
+      | '<' -> advance lexer, Token.LT
+      | '>' -> advance lexer, Token.GT
       | '{' -> advance lexer, Token.LBrace
       | '}' -> advance lexer, Token.RBrace
       | '\000' -> advance lexer, Token.EOF
@@ -91,7 +97,7 @@ let next_token lexer =
         then read_identifier lexer
         else if is_number ch
         then read_number lexer
-        else Fmt.failwith "Unkown character: %c" ch
+        else advance lexer, Token.Illegal
     in
     lexer, Some token
 ;;
