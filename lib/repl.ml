@@ -6,8 +6,7 @@ let repl =
   while !run do
     Format.printf ">> ";
     Format.print_flush ();
-    let user_input = 
-      In_channel.(input_line_exn stdin) in
+    let user_input = In_channel.(input_line_exn stdin) in
     if String.(equal user_input terminator)
     then run := false
     else (
