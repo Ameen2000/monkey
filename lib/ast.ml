@@ -17,6 +17,24 @@ and expression =
   | Int of int
   | Boolean of bool
   | String of string
+  | Prefix of
+      { operator : Token.t
+      ; right : expression
+      }
+  | Infix of
+      { operator : Token.t
+      ; left : expression
+      ; right : expression
+      }
+  | If of
+      { condition : expression
+      ; consequence : program
+      ; alternative : program option
+      }
+  | FunctionLiteral of
+      { parameter : identifier list
+      ; body : program
+      }
 
 and identifier = { identifier : string } [@@deriving show]
 

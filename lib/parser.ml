@@ -21,3 +21,15 @@ let next_token parser =
   let parser = advance parser in
   parser, parser.current_token
 ;;
+
+(** let parse_program parser =
+    let rec aux statements =
+    match parser.current_token with
+    | Token.EOF -> statements
+    | Token.Let -> aux ((parse_let token) :: statements)
+    | Token.Return -> aux ((parse_return token) :: statements)
+    | Token.If -> aux ((parse_condition token) :: statements)
+    and parse_statement t = ...
+    and parse_return t = ...
+    and parse_condition t = ...
+    **)
