@@ -7,8 +7,8 @@ type t =
 
 let init lexer =
   let current_lexer = lexer in
-  let _, current_token = Lexer.next_token lexer in
-  let _, peek_token = Lexer.next_token lexer in
+  let advanced_lexer, current_token = Lexer.next_token lexer in
+  let _, peek_token = Lexer.next_token advanced_lexer in
   { lexer = current_lexer; current_token; peek_token }
 ;;
 
@@ -22,14 +22,19 @@ let next_token parser =
   parser, parser.current_token
 ;;
 
-(** let parse_program parser =
-    let rec aux statements =
+(**
+let parse_program parser =
+  let rec aux parser statements =
     match parser.current_token with
-    | Token.EOF -> statements
-    | Token.Let -> aux ((parse_let token) :: statements)
-    | Token.Return -> aux ((parse_return token) :: statements)
-    | Token.If -> aux ((parse_condition token) :: statements)
-    and parse_statement t = ...
-    and parse_return t = ...
+    | Some Token.EOF -> statements
+    | Some Token.Let -> aux ((parse_let token) :: statements)
+    | Some Token.Return -> aux ((parse_return token) :: statements)
+    | Some Token.If -> aux ((parse_condition token) :: statements)
+  and parse_statement t = 
+    let 
+    anf parse_identifier t = ...
+  and parse_return t = ...
     and parse_condition t = ...
-    **)
+    in
+    aux parser []
+ **)
