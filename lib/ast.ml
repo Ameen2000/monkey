@@ -18,7 +18,7 @@ and expression =
   | Boolean of bool
   | String of string
 
-and identifier = { identifier : string }
+and identifier = { identifier : string } [@@deriving show]
 
 let token_literal token =
   match token with
