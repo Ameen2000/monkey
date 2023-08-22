@@ -26,15 +26,21 @@ let next_token parser =
 let parse_program parser =
   let rec aux parser statements =
     match parser.current_token with
-    | Some Token.EOF -> statements
-    | Some Token.Let -> aux ((parse_let token) :: statements)
-    | Some Token.Return -> aux ((parse_return token) :: statements)
-    | Some Token.If -> aux ((parse_condition token) :: statements)
-  and parse_statement t = 
-    let 
-    anf parse_identifier t = ...
-  and parse_return t = ...
-    and parse_condition t = ...
-    in
-    aux parser []
+    | None -> Ast.Program {statements = List.rev statements}
+    | Some tk ->
+        (match tk with
+        | Token.EOF -> Ast.Program {statements = List.rev statements}
+        | _ -> 
+            let stmt = parse_statement parser in
+            aux (advance parser) (stmt :: statements))
+            in
+  aux parser []
+
+and parse_statement parser =
+  match parser.current_token with
+  | None -> assert false
+  | Some Token.Let -> parse_let parser
+    | _ -> assert false
+
+and parse_let parser = ...
  **)
