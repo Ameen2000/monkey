@@ -1,9 +1,22 @@
+open Core
+
 type t =
   { lexer : Lexer.t
   ; current_token : Token.t option
   ; peek_token : Token.t option
   }
 [@@deriving show]
+
+type parse_error =
+  { msg : string
+  ; parser : t
+  ; statements : Ast.statement list
+  }
+[@@deriving show]
+
+let ( let* ) res f = Result.bind res ~f
+
+let error_msg parser msg statements = Error { msg; parser; statements}
 
 let init lexer =
   let current_lexer = lexer in
@@ -22,25 +35,33 @@ let next_token parser =
   parser, parser.current_token
 ;;
 
+let expect_peek parser condition =
+  match parser.peek_token with
+  | None -> Error "no peek token"
+  | Some tk -> 
+      if condition tk 
+      then Ok (advance parser)
+      else Error (Fmt.failwith "missing peeked: %a" pp parser)
+;;
+
 (**
 let parse_program parser =
   let rec aux parser statements =
     match parser.current_token with
-    | None -> Ast.Program {statements = List.rev statements}
-    | Some tk ->
-        (match tk with
-        | Token.EOF -> Ast.Program {statements = List.rev statements}
-        | _ -> 
-            let stmt = parse_statement parser in
-            aux (advance parser) (stmt :: statements))
-            in
-  aux parser []
+    | None -> Ok (parser, List.rev statements)
+    | Some _ ->
+        (match parse_statement parser with
+        | Ok (parser, stmt) -> aux (advance parser) (stmt :: statements)
+        | Error msg -> error_msg parser msg statements)
+  in
+  let* _, statements = aux parser [] in
+  Ok (Ast.program {statements})
 
 and parse_statement parser =
   match parser.current_token with
-  | None -> assert false
+  | None -> Error "no more tokens"
   | Some Token.Let -> parse_let parser
     | _ -> assert false
 
-and parse_let parser = ...
+  and parse_let parser = ...
  **)
