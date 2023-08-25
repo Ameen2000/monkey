@@ -58,6 +58,12 @@ let rec advance_till parser ~token =
     else advance_till (advance parser) ~token
 ;;
 
+let to_semicolon parser =
+  match parser.peek_token with
+  | Some Token.Semicolon -> advance parser
+  | _ -> parser
+;;
+
 let parse_identifier parser =
   let open Token in
   match parser.peek_token with
@@ -82,7 +88,10 @@ let parse_return parser =
 
 let parse_let parser =
   let* parser, name = parse_identifier parser in
+  let* parser = expect_assign parser in
+  let parser = advance parser in
   let* parser, value = parse_expression parser in
+  let parser = to_semicolon parser in
   Ok (parser, Ast.Let { name; value })
 ;;
 
