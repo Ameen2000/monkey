@@ -15,8 +15,7 @@ type parse_error =
 [@@deriving show]
 
 let ( let* ) res f = Result.bind res ~f
-
-let error_msg parser msg statements = Error { msg; parser; statements}
+let error_msg parser msg statements = Error { msg; parser; statements }
 
 let init lexer =
   let current_lexer = lexer in
@@ -38,10 +37,25 @@ let next_token parser =
 let expect_peek parser condition =
   match parser.peek_token with
   | None -> Error "no peek token"
-  | Some tk -> 
-      if condition tk 
-      then Ok (advance parser)
-      else Error (Fmt.failwith "missing peeked: %a" pp parser)
+  | Some tk ->
+    if condition tk
+    then Ok (advance parser)
+    else Error (Fmt.failwith "missing peeked: %a" pp parser)
+;;
+
+let expect_assign parser =
+  expect_peek parser (function
+    | Token.Assign -> true
+    | _ -> false)
+;;
+
+let rec advance_till parser ~token =
+  match parser.current_token with
+  | None -> parser
+  | Some tk ->
+    if Token.(equal tk token)
+    then parser
+    else advance_till (advance parser) ~token
 ;;
 
 (**
@@ -51,11 +65,11 @@ let parse_program parser =
     | None -> Ok (parser, List.rev statements)
     | Some _ ->
         (match parse_statement parser with
-        | Ok (parser, stmt) -> aux (advance parser) (stmt :: statements)
-        | Error msg -> error_msg parser msg statements)
+       | Ok (parser, stmt) -> aux (advance parser) (stmt :: statements)
+       | Error msg -> error_msg parser msg statements)
   in
   let* _, statements = aux parser [] in
-  Ok (Ast.program {statements})
+  Ok (Ast.Program {statements})
 
 and parse_statement parser =
   match parser.current_token with
@@ -63,5 +77,4 @@ and parse_statement parser =
   | Some Token.Let -> parse_let parser
     | _ -> assert false
 
-  and parse_let parser = ...
  **)
