@@ -58,6 +58,26 @@ let rec advance_till parser ~token =
     else advance_till (advance parser) ~token
 ;;
 
+let parse_identifier parser =
+  let open Token in
+  match parser.peek_token with
+  | Some (Ident identifier) -> Ok (advance parser, Ast.{identifier})
+  | _ -> Error "Expected identifier after let"
+;;
+
+let parse_expression parser =
+  match parser.peek_token with
+  | Some Token.Int number -> Ok (advance parser, Int.of_string number)
+  | _ -> Error "Expected Int"
+;;
+
+let parse_return parser =
+  match parser.peek_token with
+  | Some Token.Return ->
+      let* _, value = parse_expression (advance parser) in
+      Ok (advance parser, value)
+  | _ -> Error "Expected return"
+
 (**
 let parse_program parser =
   let rec aux parser statements =
@@ -76,5 +96,4 @@ and parse_statement parser =
   | None -> Error "no more tokens"
   | Some Token.Let -> parse_let parser
     | _ -> assert false
-
  **)
