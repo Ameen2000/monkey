@@ -14,6 +14,18 @@ type parse_error =
   }
 [@@deriving show]
 
+module Precedence = struct
+  type t =
+    | Lowest
+    | Equals
+    | LessGreater
+    | Sum
+    | Product
+    | Prefix
+    | Call
+  [@@deriving ord]
+end
+
 let ( let* ) res f = Result.bind res ~f
 let error_msg parser msg statements = Error { msg; parser; statements }
 
@@ -71,18 +83,13 @@ let parse_identifier parser =
   | _ -> Error "Expected identifier after let"
 ;;
 
-let parse_expression parser =
-  match parser.peek_token with
-  | Some (Token.Int number) ->
-    Ok (advance parser, Ast.Int (Int.of_string number))
-  | _ -> Error "Expected Int"
-;;
+let parse_expression parser prec = assert false
 
 let parse_return parser =
   match parser.peek_token with
   | Some Token.Return ->
-    let* _, value = parse_expression (advance parser) in
-    Ok (advance parser, value)
+    let* parser, value = parse_expression (advance parser) Precedence.Lowest in
+    Ok (to_semicolon parser, Ast.Return value)
   | _ -> Error "Expected return"
 ;;
 
@@ -90,16 +97,23 @@ let parse_let parser =
   let* parser, name = parse_identifier parser in
   let* parser = expect_assign parser in
   let parser = advance parser in
-  let* parser, value = parse_expression parser in
+  let* parser, value = parse_expression parser Precedence.Lowest in
   let parser = to_semicolon parser in
   Ok (parser, Ast.Let { name; value })
+;;
+
+let parse_expression_statement parser =
+  let* parser, expression = parse_expression parser Precedence.Lowest in
+  let parser = to_semicolon parser in
+  Ok (parser, Ast.ExpressionStatement expression)
 ;;
 
 let parse_statement parser =
   match parser.current_token with
   | None -> Error "no more tokens"
   | Some Token.Let -> parse_let parser
-  | _ -> assert false
+  | Some Token.Return -> parse_return parser
+  | _ -> parse_expression_statement parser
 ;;
 
 let parse_block parser =
@@ -108,8 +122,8 @@ let parse_block parser =
     match parser.current_token with
     | Some Token.RBrace -> Ok (parser, List.rev statements)
     | Some _ ->
-        let* parser, statement = parse_statement parser in
-        aux (advance parser) (statement :: statements)
+      let* parser, statement = parse_statement parser in
+      aux (advance parser) (statement :: statements)
     | None -> Error "Missing closing bracket"
   in
   let* parser, program = aux parser [] in

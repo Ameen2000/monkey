@@ -4,6 +4,7 @@ type t =
   | Expression of expression
 
 and program = { statements : statement list }
+and block = program
 
 and statement =
   | Let of
@@ -11,6 +12,8 @@ and statement =
       ; value : expression
       }
   | Return of expression
+  | ExpressionStatement of expression
+  | BlockStatement of block
 
 and expression =
   | Identifier of identifier
@@ -28,12 +31,12 @@ and expression =
       }
   | If of
       { condition : expression
-      ; consequence : program
-      ; alternative : program option
+      ; consequence : block
+      ; alternative : block option
       }
   | FunctionLiteral of
       { parameter : identifier list
-      ; body : program
+      ; body : block
       }
 
 and identifier = { identifier : string } [@@deriving show]
