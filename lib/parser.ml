@@ -93,6 +93,20 @@ let parse_statement parser =
   | _ -> assert false
 ;;
 
+let parse_block parser =
+  let parser = advance parser in
+  let rec aux parser statements =
+    match parser.current_token with
+    | Some Token.RBrace -> Ok (parser, List.rev statements)
+    | Some _ ->
+        let* parser, statement = parse_statement parser in
+        aux (advance parser) (statement :: statements)
+    | None -> Error "Missing closing bracket"
+  in
+  let* parser, program = aux parser [] in
+  Ok (parser, Ast.{ statements = program })
+;;
+
 let parse_program parser =
   let rec aux parser statements =
     match parser.current_token with
