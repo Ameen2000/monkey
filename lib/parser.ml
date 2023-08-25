@@ -61,39 +61,47 @@ let rec advance_till parser ~token =
 let parse_identifier parser =
   let open Token in
   match parser.peek_token with
-  | Some (Ident identifier) -> Ok (advance parser, Ast.{identifier})
+  | Some (Ident identifier) -> Ok (advance parser, Ast.{ identifier })
   | _ -> Error "Expected identifier after let"
 ;;
 
 let parse_expression parser =
   match parser.peek_token with
-  | Some Token.Int number -> Ok (advance parser, Int.of_string number)
+  | Some (Token.Int number) ->
+    Ok (advance parser, Ast.Int (Int.of_string number))
   | _ -> Error "Expected Int"
 ;;
 
 let parse_return parser =
   match parser.peek_token with
   | Some Token.Return ->
-      let* _, value = parse_expression (advance parser) in
-      Ok (advance parser, value)
+    let* _, value = parse_expression (advance parser) in
+    Ok (advance parser, value)
   | _ -> Error "Expected return"
+;;
 
-(**
+let parse_let parser =
+  let* parser, name = parse_identifier parser in
+  let* parser, value = parse_expression parser in
+  Ok (parser, Ast.Let { name; value })
+;;
+
+let parse_statement parser =
+  match parser.current_token with
+  | None -> Error "no more tokens"
+  | Some Token.Let -> parse_let parser
+  | _ -> assert false
+;;
+
 let parse_program parser =
   let rec aux parser statements =
     match parser.current_token with
     | None -> Ok (parser, List.rev statements)
     | Some _ ->
-        (match parse_statement parser with
+      (match parse_statement parser with
        | Ok (parser, stmt) -> aux (advance parser) (stmt :: statements)
        | Error msg -> error_msg parser msg statements)
   in
   let* _, statements = aux parser [] in
-  Ok (Ast.Program {statements})
-
-and parse_statement parser =
-  match parser.current_token with
-  | None -> Error "no more tokens"
-  | Some Token.Let -> parse_let parser
-    | _ -> assert false
- **)
+  Ok (Ast.Program { statements })
+;;
