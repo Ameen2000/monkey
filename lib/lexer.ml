@@ -61,6 +61,13 @@ let read_number lexer =
   lexer, Token.Int number
 ;;
 
+let read_string lexer =
+  let lexer = advance lexer in
+  let lexer, str = read_while lexer (fun ch -> Char.(ch <> '"')) in
+  let lexer = advance lexer in
+  lexer, Token.String str
+;;
+
 let rec skip_whitespace lexer =
   match lexer.ch with
   | None -> lexer
@@ -106,6 +113,7 @@ let next_token lexer =
       | '>' -> advance lexer, Token.GT
       | '{' -> advance lexer, Token.LBrace
       | '}' -> advance lexer, Token.RBrace
+      | '"' -> read_string lexer
       | '\000' -> advance lexer, Token.EOF
       | ch ->
         if is_identifer ch

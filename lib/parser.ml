@@ -95,6 +95,30 @@ let parse_identifier parser =
   | _ -> Error "Expected identifier after let"
 ;;
 
+let expr_parse parser =
+  match parser.current_token with
+  | Some (Token.Ident identifier) -> Ok (parser, Ast.Identifier { identifier })
+  | Some (Token.String str) -> Ok (parser, Ast.String str)
+  | Some (Token.Int number) ->
+    let number =
+      try Int.of_string number with
+      | Failure x -> Fmt.failwith "COULD NOT PARSE %s DUE to %s" number x
+    in
+    Ok (parser, Ast.Int number)
+  | _ -> Error "expecting identifier"
+;;
+
+let parse_prefix_expr parser =
+  match parser.current_token with
+  | None -> Error "No current token"
+  | Some tk ->
+    (match tk with
+     | Token.Ident _ -> expr_parse parser
+     | Token.String _ -> expr_parse parser
+     | Token.Int _ -> expr_parse parser
+     | _ -> Error "more to come")
+;;
+
 let parse_expression parser prec = assert false
 
 let parse_return parser =
