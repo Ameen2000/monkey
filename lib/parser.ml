@@ -23,7 +23,19 @@ module Precedence = struct
     | Product
     | Prefix
     | Call
-  [@@deriving ord]
+  [@@deriving show, ord]
+
+  let token_prec token =
+    let open Token in
+    match token with
+    | Equal | Not_Equal -> Equals
+    | LT | GT -> LessGreater
+    | Plus | Minus -> Sum
+    | Slash | Asterisk -> Product
+    | LParen -> Call
+    | LBrace -> Call
+    | _ -> Lowest
+  ;;
 end
 
 let ( let* ) res f = Result.bind res ~f
