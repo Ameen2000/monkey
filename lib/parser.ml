@@ -23,6 +23,7 @@ module Precedence = struct
     | Product
     | Prefix
     | Call
+    | Highest
   [@@deriving show, ord]
 
   let token_prec token =
@@ -33,7 +34,7 @@ module Precedence = struct
     | Plus | Minus -> Sum
     | Slash | Asterisk -> Product
     | LParen -> Call
-    | LBrace -> Call
+    | LBrace -> Highest
     | _ -> Lowest
   ;;
 end
@@ -105,7 +106,9 @@ let expr_parse parser =
       | Failure x -> Fmt.failwith "COULD NOT PARSE %s DUE to %s" number x
     in
     Ok (parser, Ast.Int number)
-  | _ -> Error "expecting identifier"
+  | Some (Token.True) -> Ok (parser, Ast.Boolean true)
+  | Some (Token.False) -> Ok (parser, Ast.Boolean false)
+  | _ -> Error "expecting identifier or literal"
 ;;
 
 let parse_prefix_expr parser =
@@ -119,7 +122,11 @@ let parse_prefix_expr parser =
      | _ -> Error "more to come")
 ;;
 
-let parse_expression parser prec = assert false
+let parse_expression parser prec =
+  match prec with
+  | Precedence.Lowest -> Ok (parser, Ast.Int 4)
+  | _ -> Error "work in progress"
+
 
 let parse_return parser =
   match parser.peek_token with
