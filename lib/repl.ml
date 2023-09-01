@@ -12,9 +12,12 @@ let repl =
     if String.(equal user_input terminator)
     then run := false
     else (
-      let ast = Parser.parse user_input |> Result.ok |> Option.value_exn in
-      let string_of_ast = Ast.show ast in
-      print_endline string_of_ast
-      )
+      let ast =
+        let tr = Parser.parse user_input in
+        match tr with
+        | Ok tr -> Ast.show tr
+        | Error msg -> msg.msg
+      in
+      print_endline ast)
   done
 ;;
