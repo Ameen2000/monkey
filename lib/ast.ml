@@ -35,8 +35,12 @@ and expression =
       ; alternative : block option
       }
   | FunctionLiteral of
-      { parameter : identifier list
+      { parameters : identifier list
       ; body : block
+      }
+  | Call of
+      { fn : expression
+      ; args : expression list
       }
 
 and identifier = { identifier : string } [@@deriving show]
