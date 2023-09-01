@@ -352,3 +352,9 @@ let parse_program parser =
   let* _, statements = aux parser [] in
   Ok (Ast.Program { statements })
 ;;
+
+let parse input =
+  let lexer = Lexer.init input in
+  let parser = init lexer in
+  parse_program parser
+;;
