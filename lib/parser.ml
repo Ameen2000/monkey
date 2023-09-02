@@ -282,11 +282,10 @@ and parse_list_expression parser ~close ~final =
   | None -> Error "EOF"
 
 and parse_return parser =
-  match parser.peek_token with
-  | Some Token.Return ->
-    let* parser, value = parse_expression (advance parser) Precedence.Lowest in
-    Ok (to_semicolon parser, Ast.Return value)
-  | _ -> Error "Expected return"
+  let parser = advance parser in
+  let* parser, expr = parse_expression parser Precedence.Lowest in
+  let parser = to_semicolon parser in
+  Ok (parser, Ast.Return expr)
 
 and parse_let parser =
   let* parser, name = parse_identifier parser in
